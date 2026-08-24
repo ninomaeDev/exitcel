@@ -241,8 +241,11 @@ Exitcel/
 └─ Exitcel を起動.bat    ランチャー
 ```
 
-外部ライブラリは一つも使っていません（`.xlsx` を作るための ZIP 圧縮も自前実装です）。
-そのため `npm install` のような準備作業も不要です。
+外部ライブラリは一つも使っていません。`package.json` もないので `npm install` は不要です。
+
+`.xlsx` の読み書きは、**ZIP のコンテナ構造・CRC32・XML の生成と解析を自前で実装**しています
+（圧縮そのものはブラウザ標準の `CompressionStream` を使用）。
+どう組み立てたかは **[ライブラリを使わずに .xlsx を読み書きした話](docs/xlsx-from-scratch.md)** に書きました。
 
 > **開発者向けメモ:** `Exitcel を起動.bat` は **改行 CRLF・文字コード Shift-JIS(CP932)** で保存されています。
 > cmd.exe は LF だけの .bat を正しく解釈できず「実行するとすぐ閉じる」原因になるため、
