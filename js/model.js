@@ -362,7 +362,10 @@ var M = (function () {
     var wb = new Workbook(j.name || 'ブック');
     wb.sheets = [];
     (j.sheets || []).forEach(function (sj) {
-      var s = new Sheet(sj.name || 'Sheet');
+      // BUG-003: 同名シートを含むファイルをそのまま読み込むと、シート間参照が
+      // 意図しないシートを指す。UI からの名前変更やシートのコピーは uniqueName() を
+      // 通しているので、読み込み経路でも同じ保証を掛ける
+      var s = new Sheet(wb.uniqueName(sj.name || 'Sheet'));
       for (var k in (sj.cells || {})) {
         var o = sj.cells[k];
         s.cells[k] = { v: o.v === undefined ? null : o.v, f: o.f || null, s: o.s || null, cv: null };

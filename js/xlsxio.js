@@ -910,6 +910,10 @@ var IO = (function () {
         var cell = sh.get(r, c);
         var v = cell ? (cell.f ? cell.cv : cell.v) : null;
         var txt = U.formatValue(v, cell && cell.s ? cell.s.nf : null);
+        // BUG-008: 受け取った側の表計算ソフトが数式として解釈しないよう、
+        // = + - @ タブ で始まる「文字列」の先頭に ' を付けて無害化する(CSVインジェクション)。
+        // 判定を文字列セルに限っているのは、負の数値の - を壊さないため
+        if (typeof v === 'string' && /^[=+\-@\t\r]/.test(txt)) txt = "'" + txt;
         row.push(U.csvEscape(txt, sep));
       }
       lines.push(row.join(sep));

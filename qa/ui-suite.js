@@ -171,7 +171,11 @@ window.runUiSuite = async function (opts) {
     return shown('B1');
   });
   await rec('TC-U-041', '関数(数値)', '計算不能な結果はエラー値になる', '異常系', '-', 'A1に =POWER(-8,1/3)', '#NUM!', () => { reset(); input('A1', '=POWER(-8,1/3)'); return shown('A1'); });
-  await rec('TC-U-042', '関数(数値)', '計算不能な結果が後続の集計を汚染しない', '異常系', 'A1==POWER(-8,1/3), A2=10', 'A3に =SUM(A1:A2)', '10', () => { input('A2', '10'); input('A3', '=SUM(A1:A2)'); return shown('A3'); });
+  /* 期待値を修正(2026-08-25): Excel は SUM の範囲にエラー値があると、それを無視せず
+     そのエラーを返す。当初の期待値 10(エラーを飛ばして集計する)は Excel の仕様と異なる
+     テスト側の誤りだった。この観点の本来の要件は「NaN が黙って混入しないこと」なので、
+     期待値をエラーの伝播に改めている。BUG-002 の修正で満たされる。 */
+  await rec('TC-U-042', '関数(数値)', '計算不能な結果が集計に黙って混入せずエラーとして伝播する', '異常系', 'A1==POWER(-8,1/3), A2=10', 'A3に =SUM(A1:A2)', '#NUM!', () => { input('A2', '10'); input('A3', '=SUM(A1:A2)'); return shown('A3'); });
   await rec('TC-U-043', '関数(日付)', 'DATEDIFで開始日>終了日はエラーになる', '異常系', '-', '=DATEDIF(2026/5/1,2026/1/1,"D")', '#NUM!', () => { reset(); input('A1', '=DATEDIF(DATE(2026,5,1),DATE(2026,1,1),"D")'); return shown('A1'); });
   await rec('TC-U-044', '関数(条件集計)', 'SUMIFSで範囲サイズが違う場合はエラーになる', '異常系', 'A1:A4に条件, C1:C2に合計範囲', '=SUMIFS(C1:C2,A1:A4,"x")', '#VALUE!', () => {
     reset(); input('A1', 'x'); input('A2', 'x'); input('A3', 'x'); input('A4', 'x'); input('C1', '1'); input('C2', '1');

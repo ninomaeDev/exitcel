@@ -316,7 +316,9 @@ var F = (function () {
   def('COUNTBLANK', 1, function (a) { var f = flatten(a), c = 0; for (var i = 0; i < f.length; i++) if (f[i] === null || f[i] === undefined || f[i] === '') c++; return c; }, 'COUNTBLANK(範囲) 空白セルの個数');
   def('ABS', 1, function (a) { var n = toNum(a[0]); return isErr(n) ? n : Math.abs(n); }, 'ABS(数値) 絶対値');
   def('SQRT', 1, function (a) { var n = toNum(a[0]); if (isErr(n)) return n; return n < 0 ? err(ERR.NUM) : Math.sqrt(n); }, 'SQRT(数値) 平方根');
-  def('POWER', 2, function (a) { var x = toNum(a[0]), y = toNum(a[1]); if (isErr(x)) return x; if (isErr(y)) return y; return Math.pow(x, y); }, 'POWER(数値, 指数) べき乗');
+  // BUG-002: 負数の分数乗などで Math.pow は NaN を返す。SQRT が #NUM! を返すのに
+  // POWER だけ NaN を素通ししていたため、表示にも集計にも NaN が伝播していた
+  def('POWER', 2, function (a) { var x = toNum(a[0]), y = toNum(a[1]); if (isErr(x)) return x; if (isErr(y)) return y; var r = Math.pow(x, y); return isFinite(r) ? r : err(ERR.NUM); }, 'POWER(数値, 指数) べき乗');
   def('MOD', 2, function (a) { var x = toNum(a[0]), y = toNum(a[1]); if (isErr(x)) return x; if (isErr(y)) return y; if (y === 0) return err(ERR.DIV0); return x - y * Math.floor(x / y); }, 'MOD(数値, 除数) 剰余');
   def('QUOTIENT', 2, function (a) { var x = toNum(a[0]), y = toNum(a[1]); if (y === 0) return err(ERR.DIV0); return Math.trunc(x / y); }, 'QUOTIENT(分子, 分母) 商の整数部');
   def('INT', 1, function (a) { var n = toNum(a[0]); return isErr(n) ? n : Math.floor(n); }, 'INT(数値) 切り捨て整数');
@@ -403,6 +405,9 @@ var F = (function () {
     var sumRng = flatten([a[0]]), s = 0;
     var pairs = [];
     for (var i = 1; i + 1 < a.length + 1 && i + 1 <= a.length; i += 2) pairs.push([flatten([a[i]]), makeMatcher(a[i + 1])]);
+    // BUG-005: 条件範囲と合計範囲のサイズが違う場合、Excel は #VALUE! を返す。
+    // 以前は短いほうに合わせて黙って集計しており、誤った合計に気づけなかった
+    for (var q = 0; q < pairs.length; q++) if (pairs[q][0].length !== sumRng.length) return err(ERR.VALUE);
     for (var r = 0; r < sumRng.length; r++) {
       var ok = true;
       for (var p = 0; p < pairs.length; p++) if (!pairs[p][1](pairs[p][0][r])) { ok = false; break; }
@@ -467,9 +472,11 @@ var F = (function () {
     return out.join(sep);
   }, 'TEXTJOIN(区切り, 空を無視, 文字列1, ...)');
   def('LEN', 1, function (a) { return s1(a[0]).length; }, 'LEN(文字列) 文字数');
-  def('LEFT', 1, function (a) { var n = a.length > 1 ? toNum(a[1]) : 1; return s1(a[0]).slice(0, Math.max(0, n)); }, 'LEFT(文字列, 文字数) 左から取得');
-  def('RIGHT', 1, function (a) { var n = a.length > 1 ? toNum(a[1]) : 1; return n <= 0 ? '' : s1(a[0]).slice(-n); }, 'RIGHT(文字列, 文字数) 右から取得');
-  def('MID', 3, function (a) { var st = toNum(a[1]), n = toNum(a[2]); return s1(a[0]).substr(Math.max(0, st - 1), Math.max(0, n)); }, 'MID(文字列, 開始位置, 文字数)');
+  // BUG-006: 負の文字数・0以下の開始位置は Excel では #VALUE!。
+  // 以前は Math.max(0, n) で丸めており、誤りが黙って空文字になっていた
+  def('LEFT', 1, function (a) { var n = a.length > 1 ? toNum(a[1]) : 1; if (n < 0) return err(ERR.VALUE); return s1(a[0]).slice(0, n); }, 'LEFT(文字列, 文字数) 左から取得');
+  def('RIGHT', 1, function (a) { var n = a.length > 1 ? toNum(a[1]) : 1; if (n < 0) return err(ERR.VALUE); return n === 0 ? '' : s1(a[0]).slice(-n); }, 'RIGHT(文字列, 文字数) 右から取得');
+  def('MID', 3, function (a) { var st = toNum(a[1]), n = toNum(a[2]); if (st < 1 || n < 0) return err(ERR.VALUE); return s1(a[0]).substr(st - 1, n); }, 'MID(文字列, 開始位置, 文字数)');
   def('UPPER', 1, function (a) { return s1(a[0]).toUpperCase(); }, 'UPPER(文字列) 大文字に');
   def('LOWER', 1, function (a) { return s1(a[0]).toLowerCase(); }, 'LOWER(文字列) 小文字に');
   def('PROPER', 1, function (a) { return s1(a[0]).replace(/\w\S*/g, function (t) { return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase(); }); }, 'PROPER(文字列) 先頭を大文字に');
@@ -507,10 +514,22 @@ var F = (function () {
   def('SECOND', 1, function (a) { return U.serialToDate(toNum(a[0])).getSeconds(); }, 'SECOND(シリアル値) 秒');
   def('WEEKDAY', 1, function (a) { var d = U.serialToDate(toNum(a[0])).getDay(); var t = a.length > 1 ? toNum(a[1]) : 1; return t === 2 ? (d === 0 ? 7 : d) : (t === 3 ? (d === 0 ? 6 : d - 1) : d + 1); }, 'WEEKDAY(シリアル値, 種類) 曜日番号');
   def('DAYS', 2, function (a) { return Math.round(toNum(a[0]) - toNum(a[1])); }, 'DAYS(終了日, 開始日) 日数差');
-  def('EDATE', 2, function (a) { var d = U.serialToDate(toNum(a[0])); d.setMonth(d.getMonth() + toNum(a[1])); return Math.floor(U.dateToSerial(d)); }, 'EDATE(開始日, 月数) 数か月後の日付');
+  // BUG-001: setMonth は存在しない日を翌月へ繰り上げてしまう(1/31 の1か月後が 3/3 になる)。
+  // Excel は対象月の末日に丸めるので、日を1に落としてから月を動かし、最後に日を戻す
+  def('EDATE', 2, function (a) {
+    var d = U.serialToDate(toNum(a[0])), day = d.getDate();
+    d.setDate(1);
+    d.setMonth(d.getMonth() + toNum(a[1]));
+    var last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    d.setDate(Math.min(day, last));
+    return Math.floor(U.dateToSerial(d));
+  }, 'EDATE(開始日, 月数) 数か月後の日付');
   def('EOMONTH', 2, function (a) { var d = U.serialToDate(toNum(a[0])); d.setMonth(d.getMonth() + toNum(a[1]) + 1, 0); return Math.floor(U.dateToSerial(d)); }, 'EOMONTH(開始日, 月数) 月末日');
   def('DATEDIF', 3, function (a) {
     var d1 = U.serialToDate(toNum(a[0])), d2 = U.serialToDate(toNum(a[1])), u = s1(a[2]).toUpperCase();
+    // BUG-004: 終了日が開始日より前なら Excel は #NUM!。
+    // 以前は負の日数をそのまま返しており、引数の取り違えに気づけなかった
+    if (toNum(a[1]) < toNum(a[0])) return err(ERR.NUM);
     if (u === 'D') return Math.round(toNum(a[1]) - toNum(a[0]));
     if (u === 'M') { var m = (d2.getFullYear() - d1.getFullYear()) * 12 + d2.getMonth() - d1.getMonth(); if (d2.getDate() < d1.getDate()) m--; return m; }
     if (u === 'Y') { var y = d2.getFullYear() - d1.getFullYear(); var md = (d2.getMonth() - d1.getMonth()) || (d2.getDate() - d1.getDate()); if (md < 0) y--; return y; }

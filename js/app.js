@@ -328,8 +328,18 @@ var App = (function () {
   }
   function stepDecimals(d) {
     var s = wb.sheet(), n = Grid.sel();
-    var cur = (s.styleOf(n.ar, n.ac) || {}).nf || '0';
-    if (cur === 'General' || cur === '@') cur = '0';
+    // BUG-007: 既定値が '0' だったため、書式未設定のセル(=大多数)が
+    // 0桁扱いになり、1.5 のようにすでに小数が見えていても1回押しでは
+    // 表示が変わらなかった(2回押して初めて効く)。既定を General に寄せ、
+    // 標準書式のときは、いま画面に出ている桁数を数えて起点にする
+    var cur = (s.styleOf(n.ar, n.ac) || {}).nf || 'General';
+    if (cur === 'General' || cur === '@') {
+      var dv = s.displayValue(n.ar, n.ac);
+      var shown = typeof dv === 'number' ? U.generalFormat(dv) : '';
+      var dot = shown.indexOf('E') >= 0 ? -1 : shown.indexOf('.');
+      var have = dot < 0 ? 0 : shown.length - dot - 1;
+      cur = have ? '0.' + '0'.repeat(have) : '0';
+    }
     var m = /^(.*?)(\.(0+))?([%]?)$/.exec(cur);
     var head = m[1] || '0', decs = m[3] ? m[3].length : 0, tail = m[4] || '';
     decs = U.clamp(decs + d, 0, 10);

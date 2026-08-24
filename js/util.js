@@ -221,11 +221,16 @@ var U = (function () {
 
   /* 標準書式 */
   function generalFormat(n) {
-    if (!isFinite(n)) return String(n);
+    // BUG-002: NaN / Infinity をそのまま文字にすると、セルに "NaN" と表示され
+    // 集計にも巻き込まれる。表示の出口でエラー値に倒しておく
+    if (!isFinite(n)) return '#NUM!';
     if (n === 0) return '0';
     var a = Math.abs(n);
     if (a >= 1e11 || (a < 1e-9 && a > 0)) {
-      return n.toExponential(5).replace(/e([+-])(\d)$/, 'E$10$2').replace('e', 'E');
+      // BUG-009: toExponential(5) は仮数部を5桁に固定するため 1e12 が 1.00000E+12 になる。
+      // Excel は末尾の 0 を落として 1E+12 と表示するので、それに合わせる
+      var ex = n.toExponential(5).replace(/\.?0+e/, 'e');
+      return ex.replace(/e([+-])(\d)$/, 'E$10$2').replace('e', 'E');
     }
     var s = String(Math.round(n * 1e10) / 1e10);
     if (s.length > 15) s = String(parseFloat(n.toPrecision(11)));
