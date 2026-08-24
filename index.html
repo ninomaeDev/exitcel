@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Exitcel</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="titlebar">
+  <div class="app-name">Exitcel</div>
+  <input id="bookName" type="text" value="新しいブック" spellcheck="false" title="ブック名">
+  <div class="spacer"></div>
+  <div id="saveState" class="save-state">未保存</div>
+</div>
+
+<nav id="ribbonTabs">
+  <button class="rtab" data-tab="file">ファイル</button>
+  <button class="rtab active" data-tab="home">ホーム</button>
+  <button class="rtab" data-tab="insert">挿入</button>
+  <button class="rtab" data-tab="formula">数式</button>
+  <button class="rtab" data-tab="data">データ</button>
+  <button class="rtab" data-tab="view">表示</button>
+</nav>
+
+<div id="ribbon">
+
+  <section class="rpanel" data-tab="file">
+    <div class="rgroup">
+      <div class="rrow">
+        <button class="big" id="btnNew"><span class="ic">📄</span>新規</button>
+        <button class="big" id="btnOpen"><span class="ic">📂</span>開く</button>
+        <button class="big" id="btnSave"><span class="ic">💾</span>保存</button>
+        <button class="big" id="btnExport"><span class="ic">📤</span>エクスポート</button>
+      </div>
+      <div class="glabel">ファイル</div>
+    </div>
+    <div class="rgroup">
+      <div class="rrow">
+        <button class="big" id="btnPrint"><span class="ic">🖨</span>印刷</button>
+        <button class="big" id="btnAbout"><span class="ic">ℹ️</span>情報</button>
+      </div>
+      <div class="glabel">その他</div>
+    </div>
+  </section>
+
+  <section class="rpanel active" data-tab="home">
+    <div class="rgroup">
+      <div class="rrow">
+        <button class="big" id="btnUndo" title="元に戻す (Ctrl+Z)"><span class="ic">↶</span>元に戻す</button>
+        <button class="big" id="btnRedo" title="やり直し (Ctrl+Y)"><span class="ic">↷</span>やり直し</button>
+      </div>
+      <div class="glabel">操作</div>
+    </div>
+
+    <div class="rgroup">
+      <div class="rrow">
+        <button class="big" id="btnPaste" title="貼り付け (Ctrl+V)"><span class="ic">📋</span>貼り付け</button>
+        <div class="rcol">
+          <button id="btnCut" title="切り取り (Ctrl+X)">✂ 切り取り</button>
+          <button id="btnCopy" title="コピー (Ctrl+C)">⧉ コピー</button>
+          <button id="btnFormatPainter" class="tgl" title="書式のコピー/貼り付け">🖌 書式コピー</button>
+        </div>
+      </div>
+      <div class="glabel">クリップボード</div>
+    </div>
+
+    <div class="rgroup">
+      <div class="rrow">
+        <select id="fontFamily" title="フォント">
+          <option>Yu Gothic UI</option><option>Meiryo</option><option>MS PGothic</option>
+          <option>MS Gothic</option><option>Yu Mincho</option><option>Calibri</option>
+          <option>Arial</option><option>Times New Roman</option><option>Consolas</option>
+        </select>
+        <select id="fontSize" title="サイズ">
+          <option>8</option><option>9</option><option>10</option><option selected>11</option>
+          <option>12</option><option>14</option><option>16</option><option>18</option>
+          <option>20</option><option>24</option><option>28</option><option>36</option><option>48</option>
+        </select>
+        <button id="btnFontUp" title="フォントサイズを大きく">A▲</button>
+        <button id="btnFontDown" title="フォントサイズを小さく">A▼</button>
+      </div>
+      <div class="rrow">
+        <button id="btnBold" class="tgl" title="太字 (Ctrl+B)"><b>B</b></button>
+        <button id="btnItalic" class="tgl" title="斜体 (Ctrl+I)"><i>I</i></button>
+        <button id="btnUnderline" class="tgl" title="下線 (Ctrl+U)"><u>U</u></button>
+        <button id="btnStrike" class="tgl" title="取り消し線"><s>S</s></button>
+        <span class="sep"></span>
+        <label class="colorbtn" title="文字色">A<input type="color" id="fontColor" value="#000000"></label>
+        <label class="colorbtn" title="塗りつぶし色">🎨<input type="color" id="fillColor" value="#ffe699"></label>
+        <button id="btnNoFill" title="塗りつぶしなし">▨✕</button>
+        <span class="sep"></span>
+        <button id="btnBorder" title="罫線">⊞ 罫線</button>
+      </div>
+      <div class="glabel">フォント</div>
+    </div>
+
+    <div class="rgroup">
+      <div class="rrow">
+        <button id="btnAlignTop" class="tgl" title="上揃え">⤒</button>
+        <button id="btnAlignMiddle" class="tgl" title="上下中央揃え">⇳</button>
+        <button id="btnAlignBottom" class="tgl" title="下揃え">⤓</button>
+        <span class="sep"></span>
+        <button id="btnWrap" class="tgl" title="折り返して全体を表示する">↵ 折返し</button>
+      </div>
+      <div class="rrow">
+        <button id="btnAlignLeft" class="tgl" title="左揃え">≡←</button>
+        <button id="btnAlignCenter" class="tgl" title="中央揃え">≡↔</button>
+        <button id="btnAlignRight" class="tgl" title="右揃え">≡→</button>
+        <span class="sep"></span>
+        <button id="btnMerge" class="tgl" title="セルを結合して中央揃え">⇹ 結合</button>
+      </div>
+      <div class="glabel">配置</div>
+    </div>
+
+    <div class="rgroup">
+      <div class="rrow">
+        <select id="numFmt" title="表示形式">
+          <option value="General">標準</option>
+          <option value="0">数値 (整数)</option>
+          <option value="0.00">数値 (小数2桁)</option>
+          <option value="#,##0">桁区切り</option>
+          <option value="#,##0.00">桁区切り .00</option>
+          <option value="¥#,##0">通貨 ¥</option>
+          <option value="$#,##0.00">通貨 $</option>
+          <option value="0%">パーセント</option>
+          <option value="0.00%">パーセント .00</option>
+          <option value="0.00E+00">指数</option>
+          <option value="yyyy/mm/dd">日付</option>
+          <option value="yyyy/mm/dd hh:mm">日付と時刻</option>
+          <option value="hh:mm:ss">時刻</option>
+          <option value="@">文字列</option>
+        </select>
+      </div>
+      <div class="rrow">
+        <button id="btnComma" title="桁区切りスタイル">,</button>
+        <button id="btnPercent" title="パーセントスタイル">%</button>
+        <button id="btnDecInc" title="小数点以下の表示桁数を増やす">.0→.00</button>
+        <button id="btnDecDec" title="小数点以下の表示桁数を減らす">.00→.0</button>
+      </div>
+      <div class="glabel">数値</div>
+    </div>
+
+    <div class="rgroup">
+      <div class="rrow">
+        <div class="rcol">
+          <button id="btnInsRow">⊞ 行を挿入</button>
+          <button id="btnInsCol">⊞ 列を挿入</button>
+        </div>
+        <div class="rcol">
+          <button id="btnDelRow">⊟ 行を削除</button>
+          <button id="btnDelCol">⊟ 列を削除</button>
+        </div>
+        <div class="rcol">
+          <button id="btnClearAll">🧹 すべてクリア</button>
+          <button id="btnClearFormat">🧹 書式のクリア</button>
+        </div>
+      </div>
+      <div class="glabel">セル</div>
+    </div>
+
+    <div class="rgroup">
+      <div class="rrow">
+        <button class="big" id="btnAutoSum"><span class="ic">Σ</span>オート<br>SUM</button>
+        <button class="big" id="btnFind"><span class="ic">🔍</span>検索と<br>置換</button>
+      </div>
+      <div class="glabel">編集</div>
+    </div>
+  </section>
+
+  <section class="rpanel" data-tab="insert">
+    <div class="rgroup">
+      <div class="rrow">
+        <button class="big" id="btnInsImage"><span class="ic">🖼</span>画像</button>
+        <button class="big" id="btnInsTextbox"><span class="ic">🅣</span>テキスト<br>ボックス</button>
+      </div>
+      <div class="glabel">図</div>
+    </div>
+    <div class="rgroup">
+      <div class="rrow">
+        <button class="big shape" data-shape="rect"><span class="ic">▭</span>四角形</button>
+        <button class="big shape" data-shape="ellipse"><span class="ic">⬭</span>楕円</button>
+        <button class="big shape" data-shape="arrow"><span class="ic">➜</span>矢印</button>
+        <button class="big shape" data-shape="line"><span class="ic">╱</span>直線</button>
+      </div>
+      <div class="glabel">図形</div>
+    </div>
+    <div class="rgroup">
+      <div class="rrow">
+        <button class="big chart" data-chart="bar"><span class="ic">📊</span>縦棒</button>
+        <button class="big chart" data-chart="line"><span class="ic">📈</span>折れ線</button>
+        <button class="big chart" data-chart="pie"><span class="ic">🥧</span>円</button>
+        <button class="big chart" data-chart="area"><span class="ic">▰</span>面</button>
+      </div>
+      <div class="glabel">グラフ</div>
+    </div>
+    <div class="rgroup">
+      <div class="rrow">
+        <button class="big" id="btnInsComment"><span class="ic">💬</span>メモ</button>
+      </div>
+      <div class="glabel">コメント</div>
+    </div>
+  </section>
+
+  <section class="rpanel" data-tab="formula">
+    <div class="rgroup">
+      <div class="rrow">
+        <button class="big" id="btnFx"><span class="ic">fx</span>関数の<br>挿入</button>
+      </div>
+      <div class="glabel">関数ライブラリ</div>
+    </div>
+    <div class="rgroup">
+      <div class="rrow" id="quickFuncs">
+        <button data-fn="SUM">SUM</button><button data-fn="AVERAGE">AVERAGE</button>
+        <button data-fn="COUNT">COUNT</button><button data-fn="MAX">MAX</button>
+        <button data-fn="MIN">MIN</button><button data-fn="IF">IF</button>
+        <button data-fn="VLOOKUP">VLOOKUP</button><button data-fn="ROUND">ROUND</button>
+        <button data-fn="TODAY">TODAY</button><button data-fn="CONCAT">CONCAT</button>
+      </div>
+      <div class="glabel">よく使う関数</div>
+    </div>
+    <div class="rgroup">
+      <div class="rrow">
+        <button class="big" id="btnRecalc"><span class="ic">🔄</span>再計算</button>
+        <button class="big tgl" id="btnShowFormula"><span class="ic">👁</span>数式の<br>表示</button>
+      </div>
+      <div class="glabel">計算方法</div>
+    </div>
+  </section>
+
+  <section class="rpanel" data-tab="data">
+    <div class="rgroup">
+      <div class="rrow">
+        <button class="big" id="btnSortAsc"><span class="ic">↑A</span>昇順</button>
+        <button class="big" id="btnSortDesc"><span class="ic">↓Z</span>降順</button>
+      </div>
+      <div class="glabel">並べ替え</div>
+    </div>
+    <div class="rgroup">
+      <div class="rrow">
+        <button class="big" id="btnDedup"><span class="ic">⧉</span>重複の<br>削除</button>
+        <button class="big" id="btnTranspose"><span class="ic">⇄</span>行列を<br>入れ替え</button>
+      </div>
+      <div class="glabel">データツール</div>
+    </div>
+    <div class="rgroup">
+      <div class="rrow">
+        <button class="big" id="btnImportCsv"><span class="ic">📥</span>CSV<br>取り込み</button>
+      </div>
+      <div class="glabel">外部データ</div>
+    </div>
+  </section>
+
+  <section class="rpanel" data-tab="view">
+    <div class="rgroup">
+      <div class="rrow">
+        <label class="chk"><input type="checkbox" id="chkGridlines" checked>枠線</label>
+        <label class="chk"><input type="checkbox" id="chkHeaders" checked>見出し</label>
+        <label class="chk"><input type="checkbox" id="chkFormulaBar" checked>数式バー</label>
+      </div>
+      <div class="glabel">表示</div>
+    </div>
+    <div class="rgroup">
+      <div class="rrow">
+        <button class="big tgl" id="btnFreeze"><span class="ic">❄</span>ウィンドウ枠<br>の固定</button>
+      </div>
+      <div class="glabel">ウィンドウ</div>
+    </div>
+    <div class="rgroup">
+      <div class="rrow">
+        <button id="btnZoomOut">−</button>
+        <span id="zoomLabel">100%</span>
+        <button id="btnZoomIn">＋</button>
+        <button id="btnZoomReset">100%</button>
+      </div>
+      <div class="glabel">ズーム</div>
+    </div>
+  </section>
+</div>
+
+<div id="formulaBar">
+  <input id="nameBox" type="text" spellcheck="false" title="名前ボックス">
+  <button id="fxBtn" title="関数の挿入">fx</button>
+  <input id="formulaInput" type="text" spellcheck="false" title="数式バー">
+</div>
+
+<div id="sheetArea">
+  <div id="cornerBox"><div class="corner-tri"></div></div>
+  <div id="colHead"><div id="colHeadInner"></div></div>
+  <div id="rowHead"><div id="rowHeadInner"></div></div>
+  <div id="gridScroll" tabindex="0">
+    <div id="gridInner">
+      <div id="cellLayer"></div>
+      <div id="objLayer"></div>
+      <div id="selLayer">
+        <div id="selRange"></div>
+        <div id="selActive"></div>
+        <div id="fillHandle"></div>
+        <div id="copyMarquee"></div>
+      </div>
+      <input id="cellEditor" spellcheck="false">
+    </div>
+  </div>
+</div>
+
+<div id="sheetBar">
+  <button id="btnAddSheet" title="シートの追加">＋</button>
+  <div id="sheetTabs"></div>
+</div>
+
+<div id="statusBar">
+  <span id="stMode">準備完了</span>
+  <div class="spacer"></div>
+  <span id="stStats"></span>
+  <span id="stZoom">100%</span>
+</div>
+
+<div id="modalBack"></div>
+
+<div class="modal" id="dlgExport">
+  <h3>エクスポート</h3>
+  <div class="frow"><label>ファイル名</label><input id="expName" type="text" value="book1"></div>
+  <div class="frow"><label>ファイルの種類</label>
+    <select id="expFormat">
+      <option value="exl">Exitcel ブック (*.exl)</option>
+      <option value="xlsx">Excel ブック (*.xlsx)</option>
+      <option value="csv">CSV (カンマ区切り) (*.csv)</option>
+      <option value="tsv">テキスト (タブ区切り) (*.tsv)</option>
+      <option value="json">JSON データ (*.json)</option>
+      <option value="html">Web ページ (*.html)</option>
+    </select>
+  </div>
+  <p class="hint" id="expHint"></p>
+  <div class="frow btns"><button class="ghost" data-close>キャンセル</button><button class="primary" id="expGo">エクスポート</button></div>
+</div>
+
+<div class="modal" id="dlgFind">
+  <h3>検索と置換</h3>
+  <div class="frow"><label>検索する文字列</label><input id="findText" type="text"></div>
+  <div class="frow"><label>置換後の文字列</label><input id="replText" type="text"></div>
+  <div class="frow"><label></label><label class="chk"><input type="checkbox" id="findCase">大文字と小文字を区別する</label></div>
+  <div class="frow btns">
+    <button class="ghost" data-close>閉じる</button>
+    <button id="findNext">次を検索</button>
+    <button id="replOne">置換</button>
+    <button class="primary" id="replAll">すべて置換</button>
+  </div>
+  <p class="hint" id="findHint"></p>
+</div>
+
+<div class="modal wide" id="dlgFx">
+  <h3>関数の挿入</h3>
+  <div class="frow"><label>検索</label><input id="fxSearch" type="text" placeholder="関数名で絞り込み"></div>
+  <div id="fxList"></div>
+  <p class="hint" id="fxDesc"></p>
+  <div class="frow btns"><button class="ghost" data-close>キャンセル</button><button class="primary" id="fxGo">挿入</button></div>
+</div>
+
+<div class="modal" id="dlgBorder">
+  <h3>罫線</h3>
+  <div class="frow"><label>色</label><input type="color" id="brdColor" value="#000000"></div>
+  <div class="frow"><label>スタイル</label>
+    <select id="brdStyle">
+      <option value="thin">細線</option><option value="medium">中太線</option>
+      <option value="thick">太線</option><option value="dashed">破線</option>
+      <option value="dotted">点線</option><option value="double">二重線</option>
+    </select>
+  </div>
+  <div class="brd-grid">
+    <button data-b="all">格子</button><button data-b="outer">外枠</button><button data-b="none">なし</button>
+    <button data-b="top">上罫線</button><button data-b="bottom">下罫線</button><button data-b="left">左罫線</button>
+    <button data-b="right">右罫線</button><button data-b="inner">内側</button><button data-b="thickouter">太い外枠</button>
+  </div>
+  <div class="frow btns"><button class="ghost" data-close>閉じる</button></div>
+</div>
+
+<div class="modal" id="dlgChart">
+  <h3>グラフの挿入</h3>
+  <div class="frow"><label>タイトル</label><input id="chTitle" type="text" value="グラフ タイトル"></div>
+  <div class="frow"><label>データ範囲</label><input id="chRange" type="text" placeholder="A1:C5"></div>
+  <div class="frow"><label></label><label class="chk"><input type="checkbox" id="chHeader" checked>先頭行を系列名として使う</label></div>
+  <div class="frow"><label></label><label class="chk"><input type="checkbox" id="chFirstCol" checked>先頭列を項目名として使う</label></div>
+  <div class="frow btns"><button class="ghost" data-close>キャンセル</button><button class="primary" id="chGo">挿入</button></div>
+</div>
+
+<div class="modal" id="dlgAbout">
+  <h3>Exitcel について</h3>
+  <div class="about">
+    <p><b>Exitcel</b> — ローカルで完結する表計算アプリ。<br>
+    外部ライブラリ・サーバー・インターネット接続は一切不要です。</p>
+    <p><b>保存形式</b><br>
+    <code>.exl</code> Exitcel 独自形式 … 画像・図形・グラフ・罫線・結合をすべて保持<br>
+    <code>.xlsx</code> Excel 互換形式 … Excel / LibreOffice / Google スプレッドシートで開けます</p>
+    <p><b>主なショートカット</b><br>
+    Ctrl+S 保存 ／ Ctrl+O 開く ／ Ctrl+Z 元に戻す ／ Ctrl+Y やり直し<br>
+    Ctrl+C / X / V コピー・切り取り・貼り付け ／ Ctrl+B / I / U 書式<br>
+    Ctrl+方向キー 端へ移動 ／ Ctrl+A 全選択 ／ F2 編集 ／ Delete クリア<br>
+    Ctrl+マウスホイール ズーム ／ Alt+Enter セル内改行</p>
+  </div>
+  <div class="frow btns"><button class="primary" data-close>閉じる</button></div>
+</div>
+
+<div id="ctxMenu"></div>
+<div id="toast"></div>
+
+<input type="file" id="filePicker" hidden>
+<input type="file" id="imgPicker" accept="image/*" hidden>
+
+<script src="js/util.js"></script>
+<script src="js/formula.js"></script>
+<script src="js/model.js"></script>
+<script src="js/xlsxio.js"></script>
+<script src="js/objects.js"></script>
+<script src="js/grid.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
